@@ -2,8 +2,14 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 
-# Lista asset: Futures (H24), Indici (Europei), Azioni (USA), Crypto (H24)
-watchlist = ["GC=F", "SI=F", "HG=F", "FTSEMIB.MI", "^GDAXI", "NVDA", "BTC-USD"]
+# La Watchlist definitiva: Copre tutto il mondo
+watchlist = [
+    "GC=F", "SI=F", "HG=F", "CL=F",  # Oro, Argento, Rame, Petrolio
+    "EURUSD=X", "USDJPY=X",          # Euro/Dollaro e Dollaro/Yen (Forex)
+    "^GSPC", "FTSEMIB.MI", "^N225",   # S&P500 (USA), Italia, Giappone
+    "NVDA", "AAPL", "TSLA",          # I leader del mercato Azionario
+    "BTC-USD", "ETH-USD"             # Bitcoin ed Ethereum
+]
 
 def run_scanner():
     upper_cards, lower_cards = "", ""
@@ -16,18 +22,20 @@ def run_scanner():
             vol_avg = df['Volume'].mean()
             o, i = df.iloc[-1], df.iloc[-2]
             
-            # Calcolo Segnali
+            # Calcolo Segnali basati su breakout e volumi
             is_buy = (o['Close'] > i['High']) and (o['Volume'] > vol_avg * 1.1)
             is_sell = (o['Close'] < i['Low']) and (o['Volume'] > vol_avg * 1.1)
             
-            # Calcolo Target e Stop (Target 2%, Stop sul minimo/massimo di ieri)
+            # Target e Stop intelligenti (Target 2%, Stop sul massimo/minimo precedente)
             target = o['Close'] * (1.02 if is_buy else 0.98)
             stop = i['Low'] if is_buy else i['High']
             
-            name = ticker.replace("=F","").replace("^","").replace(".MI","")
+            # Pulizia nomi per la grafica
+            name = ticker.replace("=F","").replace("^","").replace(".MI","").replace("-USD","").replace("=X","")
+            if name == "GSPC": name = "S&P 500"
             
-            # Design della Card con Target e Stop
-            status_color = "#00ff7f" if is_buy else "#ff4b4b" if is_sell else "#555"
+            # Design Professionale
+            status_color = "#00ff7f" if is_buy else "#ff4b4b" if is_sell else "#aaa"
             bg_color = "#112a1d" if is_buy else "#2a1111" if is_sell else "#1c2128"
             border_color = status_color if (is_buy or is_sell) else "#333"
             
@@ -54,17 +62,16 @@ def run_scanner():
     <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="refresh" content="300"></head>
     <body style="background:#000; margin:0; padding:15px; color:white; font-family:sans-serif;">
-        <h2 style="color:#ffd700; text-align:center;">🌍 POCKET SCANNER PRO</h2>
-        <p style="text-align:center; color:#666; font-size:0.8em; margin-bottom:20px;">Dati sincronizzati (EU/USA/Crypto)</p>
+        <h2 style="color:#ffd700; text-align:center; margin-bottom:5px;">🌍 GLOBAL SCANNER PRO</h2>
+        <p style="text-align:center; color:#666; font-size:0.8em; margin-bottom:20px;">Monitoraggio Mercati H24</p>
         {upper_cards}
-        <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
+        <div style="text-align:center; color:#555; font-size:0.9em; margin:20px 0;">--- IN ATTESA DI SEGNALE ---</div>
         {lower_cards}
-        <p style="text-align:center; color:#444; font-size:0.7em;">Ultimo Update: {now.strftime('%H:%M:%S')}</p>
+        <p style="text-align:center; color:#444; font-size:0.7em; margin-top:30px;">Ultimo Update: {now.strftime('%H:%M:%S')}</p>
     </body></html>"""
     
-    with open("index.html", "w") as f:
-        f.write(html_final)
+    with open("index.html", "w") as f: f.write(html_final)
 
-if __name__ == "__main__":
-    run_scanner()
+if __name__ == "__main__": run_scanner()
+
 
