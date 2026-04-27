@@ -1,0 +1,31 @@
+name: Update Scanner Data
+on:
+  schedule:
+    - cron: '0 * * * *' # Il robot si attiva automaticamente ogni ora
+  workflow_dispatch:   # Ti permette di attivarlo manualmente se hai fretta
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v2
+      
+      - name: Configura Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      
+      - name: Installa librerie Trading
+        run: pip install yfinance pandas
+      
+      - name: Esegui lo Scanner
+        run: python scanner.py
+      
+      - name: Salva i nuovi dati su GitHub
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add index.html
+          git commit -m "Aggiornamento automatico segnali" || exit 0
+          git push
